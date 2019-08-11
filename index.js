@@ -70,11 +70,37 @@ if(devicePath) {
     }
   }
 
+  var presetMessageTypes = {
+    COMPLETE: 0,
+    CHANGE: 1,
+    SAVE: 2,
+    SAVENAME: 3,
+    NAME: 4,
+    AMPLIFIER: 5,
+    DISTORTION: 6,
+    MODULATION: 7,
+    DELAY: 8,
+    REVERB: 9,
+    EXPRESSION: 10,
+    SYSTEM: 11,
+    COMPRESSOR: !2,
+    USBAUDIO: 13,
+    EFFECTSLOOP: 14
+  }
+
+  // controlId in messages
+  var controls = {
+    VOICE : 1,
+    FXSELECT : 2
+  };
+
   var devices = {
     11 : { name: "reverb", controls: ["amount"] },
     22 : { name: "delay", controls: ["amount", "tap"] },
     106 : { name: "amplifier", controls: ["volume", "gain", "unknown", "unknown", "treble", "unknown", "bass" ] }
   }
+
+  //var device = { presets: [] };
   
 
   var messages = {
@@ -83,7 +109,48 @@ if(devicePath) {
     5 : { name: "ControlParameter", process: (flags, reader) => { return { effectType: effectsTypes[reader.nextUInt8()], deviceId: reader.nextUInt16LE(), index: reader.nextUInt8(), controlIndex: reader.nextUInt8(), parameterType: parameterTypes[reader.nextUInt16LE()], parameterValue: reader.nextUInt8() }; } },
     6 : { name: "EffectsUnit" },
     8 : { name: "Preset?" },
-    28: { name: "Preset", process: (flags, reader) => { return {  }}},
+    28: { name: "PresetMessage",
+      process: (flags, reader) => {
+        var retObj = {
+          presetMessageType: reader.nextUInt8(),
+          controlId: reader.nextUInt8(),
+          position: reader.nextUInt16LE(),
+          isModified: reader.nextUInt8(),
+          isCurrent: reader.nextUInt8()
+        };
+        switch(retObj.presetMessageType) {
+          case presetMessageTypes.NAME:
+              retObj.zeroData = reader.nextBuffer(8);
+              retObj.name = reader.nextString(48).replace(/\0/g, '');
+              device.presets
+              break;
+            case presetMessageTypes.DISTORTION:
+            case presetMessageTypes.MODULATION:
+            case presetMessageTypes.DELAY:
+            case presetMessageTypes.REVERB:
+              retObj.zeroData = reader.nextBuffer(8);
+              retObj.deviceId = reader.nextUInt16LE();
+              retObj.controlIndex = reader.nextUInt8();
+              retObj.expressionIndex = reader.nextUInt8();
+              retObj.tapIndex = reader.nextUInt8();
+              retObj.bypassMode = reader.nextUInt16LE();
+              retObj.bypass = reader.nextUInt8();
+              retObj.pedal = true;
+              retObj.finalData = reader.nextBuffer(40);
+              break;
+            case presetMessageTypes.EXPRESSION:
+              retObj.expressionPedal = true;
+              retObj.finalData = reader.nextBuffer(56);
+              break;
+            case presetMessageTypes.COMPLETE:
+              retObj.complete = true;
+              break;
+            default:
+              retObj.finalData = reader.nextBuffer(56);
+              break;
+        }
+        return retObj;
+      }},
     29: { name: "RotarySwitch", process: (flags, reader) => { return { position: reader.nextUInt8(), knobIndex: reader.nextUInt8() }; } }
   };
 
