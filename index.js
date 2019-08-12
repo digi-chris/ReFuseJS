@@ -3,6 +3,91 @@ var BufferReader = require('buffer-reader');
 var devices = HID.devices();
 const os = require('os');
 
+class MessageProcessor {
+  constructor(device) {
+    this.device = device;
+  }
+
+  Process (messageArgs, reader) {
+    var msgObj = {};
+    for(var i = 0; i < messageArgs.length; i++) {
+      switch(messageArgs[i].type) {
+        default:
+          msgObj[messageArgs[i].name] = reader['next' + messageArgs[i].type]();
+          break;
+      }
+    }
+    return msgObj;
+  }
+
+  Version (reader) {
+    console.log("Processing Version");
+  }
+
+  ControlParameter (reader) {
+    //console.log("ControlParameter...");
+  }
+
+  PresetMessage (reader) {
+    //console.log("PresetMessage...");
+  }
+}
+
+class FuseDevice {
+  constructor(usbDevice) {
+    this.Devices = {};
+    this.Presets = [];
+    var msgProc = new MessageProcessor(this);
+    //msgProc["PresetMessage"]();
+    //console.log(msgProc);
+    //console.log(MessageProcessor);
+    function sendBuffer(buffer) {
+      if(os.platform() === "win32") {
+          buffer.unshift(0);
+      }
+      device.write(buffer);
+    }
+
+    usbDevice.on("data", function(data) {
+      var reader = new BufferReader(data);
+      var msgId = reader.nextUInt8();
+      var flags = reader.nextUInt8();
+      if(messages[msgId]) {
+        if(messages[msgId].args) {
+          console.log(msgProc.Process(messages[msgId].args, reader));
+        }
+          //console.log(messages[msgId].name);
+          //if(msgProc[messages[msgId].name]) {
+          //  msgProc[messages[msgId].name](reader);
+          //}
+          if(messages[msgId].process) {
+              //console.log(messages[msgId].process(flags, reader));
+          } else {
+              console.log("Cannot process message.");
+          }
+      } else {
+          console.log("Unknown message: " + msgId);
+      }
+    });
+
+    var handshake = Array(64).fill(0x00);
+    handshake[1] = 0xC3;
+    sendBuffer(handshake);
+    console.log("Handshake: " + new Buffer.from(device.readSync()).toString('ascii'));
+  
+    var handshake2 = Array(64).fill(0x00);
+    handshake2[0] = 0x1A;
+    handshake2[1] = 0xC1;
+    sendBuffer(handshake2);
+    console.log("Handshake 2: " + new Buffer.from(device.readSync()).toString('ascii'));
+
+    var handshake3 = Array(64).fill(0x00);
+    handshake3[0] = 0xFF;
+    handshake3[1] = 0xC1;
+    sendBuffer(handshake3);
+  }
+}
+
 //console.log(devices);
 var devicePath;
 for(var i = 0; i < devices.length; i++) {
@@ -17,28 +102,20 @@ if(devicePath) {
 
   console.log(device);
 
-  //device.on("data", function(data) {
-  //  console.log("Data");
-  //  console.log(data);
-  //});
+  // var handshake = Array(64).fill(0x00);
+  // handshake[1] = 0xC3;
+  // sendBuffer(handshake);
+  // console.log("Handshake: " + new Buffer.from(device.readSync()).toString('ascii'));
 
-  //console.log(device.readSync());
+  // var handshake2 = Array(64).fill(0x00);
+  // handshake2[0] = 0x1A;
+  // handshake2[1] = 0xC1;
+  // sendBuffer(handshake2);
+  // console.log("Handshake 2: " + new Buffer.from(device.readSync()).toString('ascii'));
 
-  var handshake = Array(64).fill(0x00);
-  handshake[1] = 0xC3;
-  sendBuffer(handshake);
-  console.log("Handshake: " + new Buffer.from(device.readSync()).toString('ascii'));
-
-  var handshake2 = Array(64).fill(0x00);
-  handshake2[0] = 0x1A;
-  handshake2[1] = 0xC1;
-  sendBuffer(handshake2);
-  console.log("Handshake 2: " + new Buffer.from(device.readSync()).toString('ascii'));
-
-
-  var handshake3 = Array(64).fill(0x00);
-  handshake3[0] = 0xFF;
-  handshake3[1] = 0xC1;
+  // var handshake3 = Array(64).fill(0x00);
+  // handshake3[0] = 0xFF;
+  // handshake3[1] = 0xC1;
 
   var effectsTypes = {
     0 : { id: 0, name: "unknown" },
@@ -110,6 +187,13 @@ if(devicePath) {
     6 : { name: "EffectsUnit" },
     8 : { name: "Preset?" },
     28: { name: "PresetMessage",
+          args: [
+                 { name: 'presetMessageType', type: 'UInt8' }
+                ,{ name: 'controlId', type: 'UInt8' }
+                ,{ name: 'position', type: 'UInt16LE' }
+                ,{ name: 'isModified', type: 'UInt8' }
+                ,{ name: 'isCurrent', type: 'UInt8' }
+              ],
       process: (flags, reader) => {
         var retObj = {
           presetMessageType: reader.nextUInt8(),
@@ -155,29 +239,30 @@ if(devicePath) {
   };
 
 
-  function sendBuffer(buffer) {
-      if(os.platform() === "win32") {
-          buffer.unshift(0);
-      }
-      device.write(buffer);
-  }
+  // function sendBuffer(buffer) {
+  //     if(os.platform() === "win32") {
+  //         buffer.unshift(0);
+  //     }
+  //     device.write(buffer);
+  // }
 
-  device.on("data", function(data) {
-      //console.log(data);
-      var reader = new BufferReader(data);
-      var msgId = reader.nextUInt8();
-      var flags = reader.nextUInt8();
-      if(messages[msgId]) {
-          console.log(messages[msgId].name);
-          if(messages[msgId].process) {
-              console.log(messages[msgId].process(flags, reader));
-          } else {
-              console.log("Cannot process message.");
-          }
-      } else {
-          console.log("Unknown message: " + msgId);
-      }
-  });
+  // device.on("data", function(data) {
+  //     //console.log(data);
+  //     var reader = new BufferReader(data);
+  //     var msgId = reader.nextUInt8();
+  //     var flags = reader.nextUInt8();
+  //     if(messages[msgId]) {
+  //         console.log(messages[msgId].name);
+  //         if(messages[msgId].process) {
+  //             console.log(messages[msgId].process(flags, reader));
+  //         } else {
+  //             console.log("Cannot process message.");
+  //         }
+  //     } else {
+  //         console.log("Unknown message: " + msgId);
+  //     }
+  // });
 
-  sendBuffer(handshake3);
+  //sendBuffer(handshake3);
+  var fDevice = new FuseDevice(device);
 }
