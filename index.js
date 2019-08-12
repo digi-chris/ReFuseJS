@@ -8,8 +8,10 @@ class MessageProcessor {
     this.device = device;
   }
 
-  Process (messageArgs, reader) {
-    var msgObj = {};
+  Process (messageArgs, reader, msgObj) {
+    if(!msgObj) {
+      msgObj = {};
+    }
     for(var i = 0; i < messageArgs.length; i++) {
       switch(messageArgs[i].type) {
         default:
@@ -194,6 +196,14 @@ if(devicePath) {
                 ,{ name: 'isModified', type: 'UInt8' }
                 ,{ name: 'isCurrent', type: 'UInt8' }
               ],
+          "presetMessageType": {
+            4: {
+              args: [
+                { name: 'zeroData', type: 'Buffer', count: 8},
+                { name: 'name', type: 'String', count: 48}
+              ]
+            }
+          }
       process: (flags, reader) => {
         var retObj = {
           presetMessageType: reader.nextUInt8(),
