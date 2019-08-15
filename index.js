@@ -8,15 +8,34 @@ class MessageProcessor {
     this.device = device;
   }
 
-  Process (messageArgs, reader, msgObj) {
+  Process (messageType, reader, msgObj) {
+    var messageArgs = messageType.args;
     if(!msgObj) {
-      msgObj = {};
+      msgObj = { };
     }
+    msgObj.messageName = messageType.name ;
     for(var i = 0; i < messageArgs.length; i++) {
       switch(messageArgs[i].type) {
+        case "Buffer":
+          msgObj[messageArgs[i].name] = reader.nextBuffer(messageArgs[i].count);
+          break;
+        case "String":
+            msgObj[messageArgs[i].name] = reader.nextString(messageArgs[i].count);
+          break;
         default:
           msgObj[messageArgs[i].name] = reader['next' + messageArgs[i].type]();
           break;
+      }
+      if(messageArgs[i].followon) {
+        // this message should forward to a subtype
+        var followOnId = '' + msgObj[messageArgs[i].name];
+        var followOnObj = messageArgs[i].followon;
+        
+        if(followOnObj[followOnId]) {
+          console.log('found followon:', followOnId, followOnObj);
+          msgObj = this.Process(followOnObj[followOnId], reader, msgObj);
+          //console.log('followOn response:', msgObj);
+        }
       }
     }
     return msgObj;
@@ -56,7 +75,7 @@ class FuseDevice {
       var flags = reader.nextUInt8();
       if(messages[msgId]) {
         if(messages[msgId].args) {
-          console.log(msgProc.Process(messages[msgId].args, reader));
+          console.log(msgProc.Process(messages[msgId], reader));
         }
           //console.log(messages[msgId].name);
           //if(msgProc[messages[msgId].name]) {
@@ -180,7 +199,19 @@ if(devicePath) {
   }
 
   //var device = { presets: [] };
-  
+
+  var presetMessages = {
+    4: { name: "PresetName",
+      args: [
+        { name: 'controlId', type: 'UInt8' }
+        ,{ name: 'position', type: 'UInt16LE' }
+        ,{ name: 'isModified', type: 'UInt8' }
+        ,{ name: 'isCurrent', type: 'UInt8' }
+        ,{ name: 'zeroData', type: 'Buffer', count: 8}
+        ,{ name: 'name', type: 'String', count: 48}
+      ]
+    }
+  }
 
   var messages = {
     0 : { name: "Handshake" },
@@ -190,20 +221,9 @@ if(devicePath) {
     8 : { name: "Preset?" },
     28: { name: "PresetMessage",
           args: [
-                 { name: 'presetMessageType', type: 'UInt8' }
-                ,{ name: 'controlId', type: 'UInt8' }
-                ,{ name: 'position', type: 'UInt16LE' }
-                ,{ name: 'isModified', type: 'UInt8' }
-                ,{ name: 'isCurrent', type: 'UInt8' }
-              ],
-          "presetMessageType": {
-            4: {
-              args: [
-                { name: 'zeroData', type: 'Buffer', count: 8},
-                { name: 'name', type: 'String', count: 48}
+                 { name: 'presetMessageType', type: 'UInt8', followon: presetMessages }
               ]
-            }
-          }
+          ,
       process: (flags, reader) => {
         var retObj = {
           presetMessageType: reader.nextUInt8(),
