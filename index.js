@@ -14,27 +14,32 @@ class MessageProcessor {
       msgObj = { };
     }
     msgObj.messageName = messageType.name ;
-    for(var i = 0; i < messageArgs.length; i++) {
-      switch(messageArgs[i].type) {
-        case "Buffer":
-          msgObj[messageArgs[i].name] = reader.nextBuffer(messageArgs[i].count);
-          break;
-        case "String":
-            msgObj[messageArgs[i].name] = reader.nextString(messageArgs[i].count);
-          break;
-        default:
-          msgObj[messageArgs[i].name] = reader['next' + messageArgs[i].type]();
-          break;
-      }
-      if(messageArgs[i].followon) {
-        // this message should forward to a subtype
-        var followOnId = '' + msgObj[messageArgs[i].name];
-        var followOnObj = messageArgs[i].followon;
-        
-        if(followOnObj[followOnId]) {
-          console.log('found followon:', followOnId, followOnObj);
-          msgObj = this.Process(followOnObj[followOnId], reader, msgObj);
-          //console.log('followOn response:', msgObj);
+    if(messageArgs) {
+      for(var i = 0; i < messageArgs.length; i++) {
+        switch(messageArgs[i].type) {
+          case "Buffer":
+            msgObj[messageArgs[i].name] = reader.nextBuffer(messageArgs[i].count);
+            break;
+          case "String":
+              msgObj[messageArgs[i].name] = reader.nextString(messageArgs[i].count).replace(/\0/g, '');
+            break;
+          default:
+            msgObj[messageArgs[i].name] = reader['next' + messageArgs[i].type]();
+            break;
+        }
+        if(messageArgs[i].lookup) {
+          msgObj[messageArgs[i].name] = messageArgs[i].lookup[msgObj[messageArgs[i].name]];
+        }
+        if(messageArgs[i].followon) {
+          // this message should forward to a subtype
+          var followOnId = '' + msgObj[messageArgs[i].name];
+          var followOnObj = messageArgs[i].followon;
+          
+          if(followOnObj[followOnId]) {
+            //console.log('found followon:', followOnId, followOnObj);
+            msgObj = this.Process(followOnObj[followOnId], reader, msgObj);
+            //console.log('followOn response:', msgObj);
+          }
         }
       }
     }
@@ -75,17 +80,14 @@ class FuseDevice {
       var flags = reader.nextUInt8();
       if(messages[msgId]) {
         if(messages[msgId].args) {
-          console.log(msgProc.Process(messages[msgId], reader));
-        }
-          //console.log(messages[msgId].name);
-          //if(msgProc[messages[msgId].name]) {
-          //  msgProc[messages[msgId].name](reader);
-          //}
-          if(messages[msgId].process) {
-              //console.log(messages[msgId].process(flags, reader));
-          } else {
-              console.log("Cannot process message.");
+          var messageData = msgProc.Process(messages[msgId], reader);
+          console.log(messageData);
+          if(operators[messageData.messageName]) {
+            operators[messageData.messageName](messageData);
+            //console.log(devices);
+            console.log(JSON.stringify(devices, null, 4));
           }
+        }
       } else {
           console.log("Unknown message: " + msgId);
       }
@@ -138,7 +140,7 @@ if(devicePath) {
   // handshake3[0] = 0xFF;
   // handshake3[1] = 0xC1;
 
-  var effectsTypes = {
+  var effectTypes = {
     0 : { id: 0, name: "unknown" },
     1 : { id: 1, name: "unknown" },
     2 : { id: 2, name: "amplifier" },
@@ -150,8 +152,8 @@ if(devicePath) {
 
   // fill in unknown effects types
   for(var i = 0; i < 255; i++) {
-    if(!effectsTypes[i]) {
-      effectsTypes[i] = { id: i, name: "unknown" };
+    if(!effectTypes[i]) {
+      effectTypes[i] = { id: i, name: "unknown" };
     }
   }
 
@@ -186,21 +188,41 @@ if(devicePath) {
     EFFECTSLOOP: 14
   }
 
-  // controlId in messages
+  // controlId in messages`
   var controls = {
     VOICE : 1,
     FXSELECT : 2
   };
 
   var devices = {
-    11 : { name: "reverb", controls: ["amount"] },
-    22 : { name: "delay", controls: ["amount", "tap"] },
-    106 : { name: "amplifier", controls: ["volume", "gain", "unknown", "unknown", "treble", "unknown", "bass" ] }
+    11 : { name: "reverb", controls: [{ label: "amount" }] },
+    22 : { name: "delay", controls: [{ label: "amount" }, { label: "tap" }] },
+    106 : { name: "amplifier", controls: [{ label: "volume" }, { label: "gain" }, { label: "unknown" }, { label: "unknown" }, { label: "treble" }, { label: "unknown" } , { label: "bass" } ] }
+  }
+
+  var operators = {
+    "ControlParameter" : (data) => {
+      if(!devices[data.deviceId]) {
+        devices[data.deviceId] = {};
+        devices[data.deviceId].name = "unknown";
+        devices[data.deviceId].controls = [];
+      }
+      for(var obj in data) {
+        if(!devices[data.deviceId].controls[data.controlIndex]) {
+          devices[data.deviceId].controls[data.controlIndex] = { label: "unknown" };
+        }
+        devices[data.deviceId].controls[data.controlIndex][obj] = data[obj];
+      }
+    }
   }
 
   //var device = { presets: [] };
 
   var presetMessages = {
+    0: { name: "PresetComplete"},
+    1: { name: "PresetChange" },
+    2: { name: "PresetSave" },
+    3: { name: "PresetSaveName" },
     4: { name: "PresetName",
       args: [
         { name: 'controlId', type: 'UInt8' }
@@ -210,62 +232,101 @@ if(devicePath) {
         ,{ name: 'zeroData', type: 'Buffer', count: 8}
         ,{ name: 'name', type: 'String', count: 48}
       ]
-    }
+    },
+    5: { name: "PresetAmplifier" },
+    6: { name: "PresetDistortion",
+         args: [
+           { name: 'controlId', type: 'UInt8' }
+          ,{ name: 'position', type: 'UInt16LE' }
+          ,{ name: 'isModified', type: 'UInt8' }
+          ,{ name: 'isCurrent', type: 'UInt8' }
+          ,{ name: 'zeroData', type: 'Buffer', count: 8}
+          ,{ name: 'deviceId', type: 'UInt16LE' }
+          ,{ name: 'controlIndex', type: 'UInt8' }
+          ,{ name: 'expressionIndex', type: 'UInt8' }
+          ,{ name: 'tapIndex', type: 'UInt8' }
+          ,{ name: 'bypassMode', type: 'UInt16LE' }
+          ,{ name: 'bypass', type: 'UInt8' }
+          ,{ name: 'finalData', type: 'Buffer', count: 40 }
+         ] },
+    7: { name: "PresetModulation",
+          args: [
+            { name: 'controlId', type: 'UInt8' }
+          ,{ name: 'position', type: 'UInt16LE' }
+          ,{ name: 'isModified', type: 'UInt8' }
+          ,{ name: 'isCurrent', type: 'UInt8' }
+          ,{ name: 'zeroData', type: 'Buffer', count: 8}
+          ,{ name: 'deviceId', type: 'UInt16LE' }
+          ,{ name: 'controlIndex', type: 'UInt8' }
+          ,{ name: 'expressionIndex', type: 'UInt8' }
+          ,{ name: 'tapIndex', type: 'UInt8' }
+          ,{ name: 'bypassMode', type: 'UInt16LE' }
+          ,{ name: 'bypass', type: 'UInt8' }
+          ,{ name: 'finalData', type: 'Buffer', count: 40 }
+          ] },
+    8: { name: "PresetDelay",
+          args: [
+            { name: 'controlId', type: 'UInt8' }
+          ,{ name: 'position', type: 'UInt16LE' }
+          ,{ name: 'isModified', type: 'UInt8' }
+          ,{ name: 'isCurrent', type: 'UInt8' }
+          ,{ name: 'zeroData', type: 'Buffer', count: 8}
+          ,{ name: 'deviceId', type: 'UInt16LE' }
+          ,{ name: 'controlIndex', type: 'UInt8' }
+          ,{ name: 'expressionIndex', type: 'UInt8' }
+          ,{ name: 'tapIndex', type: 'UInt8' }
+          ,{ name: 'bypassMode', type: 'UInt16LE' }
+          ,{ name: 'bypass', type: 'UInt8' }
+          ,{ name: 'finalData', type: 'Buffer', count: 40 }
+          ] },
+    9: { name: "PresetReverb",
+          args: [
+            { name: 'controlId', type: 'UInt8' }
+          ,{ name: 'position', type: 'UInt16LE' }
+          ,{ name: 'isModified', type: 'UInt8' }
+          ,{ name: 'isCurrent', type: 'UInt8' }
+          ,{ name: 'zeroData', type: 'Buffer', count: 8}
+          ,{ name: 'deviceId', type: 'UInt16LE' }
+          ,{ name: 'controlIndex', type: 'UInt8' }
+          ,{ name: 'expressionIndex', type: 'UInt8' }
+          ,{ name: 'tapIndex', type: 'UInt8' }
+          ,{ name: 'bypassMode', type: 'UInt16LE' }
+          ,{ name: 'bypass', type: 'UInt8' }
+          ,{ name: 'finalData', type: 'Buffer', count: 40 }
+          ] },
+    10: { name: "PresetExpression" },
+    11: { name: "PresetSystem" },
+    12: { name: "PresetCompressor" },
+    13: { name: "PresetUSBAudio" },
+    14: { name: "PresetEffectsLoop" }
   }
 
   var messages = {
     0 : { name: "Handshake" },
     1 : { name: "Version" },
-    5 : { name: "ControlParameter", process: (flags, reader) => { return { effectType: effectsTypes[reader.nextUInt8()], deviceId: reader.nextUInt16LE(), index: reader.nextUInt8(), controlIndex: reader.nextUInt8(), parameterType: parameterTypes[reader.nextUInt16LE()], parameterValue: reader.nextUInt8() }; } },
+    5 : { name: "ControlParameter",
+          args: [
+            { name: 'effectType', type: 'UInt8', lookup: effectTypes },
+            { name: 'deviceId', type: 'UInt16LE' },
+            { name: 'index', type: 'UInt8' },
+            { name: 'controlIndex', type: 'UInt8' },
+            { name: 'parameterType', type: 'UInt16LE', lookup: parameterTypes },
+            { name: 'parameterValue', type: 'UInt8' }
+          ]
+        },
     6 : { name: "EffectsUnit" },
     8 : { name: "Preset?" },
     28: { name: "PresetMessage",
           args: [
                  { name: 'presetMessageType', type: 'UInt8', followon: presetMessages }
               ]
-          ,
-      process: (flags, reader) => {
-        var retObj = {
-          presetMessageType: reader.nextUInt8(),
-          controlId: reader.nextUInt8(),
-          position: reader.nextUInt16LE(),
-          isModified: reader.nextUInt8(),
-          isCurrent: reader.nextUInt8()
-        };
-        switch(retObj.presetMessageType) {
-          case presetMessageTypes.NAME:
-              retObj.zeroData = reader.nextBuffer(8);
-              retObj.name = reader.nextString(48).replace(/\0/g, '');
-              device.presets
-              break;
-            case presetMessageTypes.DISTORTION:
-            case presetMessageTypes.MODULATION:
-            case presetMessageTypes.DELAY:
-            case presetMessageTypes.REVERB:
-              retObj.zeroData = reader.nextBuffer(8);
-              retObj.deviceId = reader.nextUInt16LE();
-              retObj.controlIndex = reader.nextUInt8();
-              retObj.expressionIndex = reader.nextUInt8();
-              retObj.tapIndex = reader.nextUInt8();
-              retObj.bypassMode = reader.nextUInt16LE();
-              retObj.bypass = reader.nextUInt8();
-              retObj.pedal = true;
-              retObj.finalData = reader.nextBuffer(40);
-              break;
-            case presetMessageTypes.EXPRESSION:
-              retObj.expressionPedal = true;
-              retObj.finalData = reader.nextBuffer(56);
-              break;
-            case presetMessageTypes.COMPLETE:
-              retObj.complete = true;
-              break;
-            default:
-              retObj.finalData = reader.nextBuffer(56);
-              break;
+        },
+    29: { name: "RotarySwitch",
+          args: [
+                { name: 'position', type: 'UInt8' },
+                { name: 'knobIndex', type: 'UInt8' }
+              ]
         }
-        return retObj;
-      }},
-    29: { name: "RotarySwitch", process: (flags, reader) => { return { position: reader.nextUInt8(), knobIndex: reader.nextUInt8() }; } }
   };
 
 
