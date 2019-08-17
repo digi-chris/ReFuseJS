@@ -1,23 +1,5 @@
-var operators = {
-    "ControlParameter" : (data) => {
-        if(!devices[data.deviceId]) {
-        devices[data.deviceId] = {};
-        devices[data.deviceId].name = "unknown";
-        devices[data.deviceId].controls = [];
-        }
-        for(var obj in data) {
-        if(!devices[data.deviceId].controls[data.controlIndex]) {
-            devices[data.deviceId].controls[data.controlIndex] = { label: "unknown" };
-        }
-        devices[data.deviceId].controls[data.controlIndex][obj] = data[obj];
-        }
-    }
-};
-var devices;
-
 class MessageProcessor {
     constructor(device) {
-        devices = device;
         this.device = device;
     }
   
@@ -26,7 +8,13 @@ class MessageProcessor {
       if(!msgObj) {
         msgObj = { };
       }
-      msgObj.messageName = messageType.name ;
+      msgObj.messageName = messageType.name;
+      if(messageType.startchain) {
+        msgObj._startchain = true;
+      }
+      if(messageType.endchain) {
+        msgObj._endchain = true;
+      }
       if(messageArgs) {
         for(var i = 0; i < messageArgs.length; i++) {
           switch(messageArgs[i].type) {

@@ -4,6 +4,8 @@ var devices = HID.devices();
 var MessageProcessor = require('./MessageProcessor.js');
 const os = require('os');
 
+var messageChain = [];
+var inChain = false;
 class FuseDevice {
   constructor(usbDevice) {
     this.Devices = {};
@@ -26,11 +28,22 @@ class FuseDevice {
       if(messages[msgId]) {
         if(messages[msgId].args) {
           var messageData = msgProc.Process(messages[msgId], reader);
-          //console.log(messageData);
-          if(operators[messageData.messageName]) {
-            operators[messageData.messageName](messageData);
+          console.log(messageData);
+          if(messageData._startchain) {
+            inChain = true;
+            messageChain = [];
+          }
+          if(messageData._endchain) {
+            inChain = false;
+            //console.log('Chained message:');
+            //console.log(messageChain);
+          }
+          if(inChain) {
+            messageChain.push(messageData);
+          } else if(operators[messageData.messageName]) {
+            operators[messageData.messageName](messageData, messageChain);
             //console.log(devices);
-            console.log(JSON.stringify(devices, null, 4));
+            //console.log(JSON.stringify(devices, null, 4));
           }
         }
       } else {
@@ -165,7 +178,7 @@ if(devicePath) {
   //var device = { presets: [] };
 
   var presetMessages = {
-    0: { name: "PresetComplete"},
+    0: { name: "PresetComplete", endchain: true},
     1: { name: "PresetChange" },
     2: { name: "PresetSave" },
     3: { name: "PresetSaveName" },
@@ -177,7 +190,8 @@ if(devicePath) {
         ,{ name: 'isCurrent', type: 'UInt8' }
         ,{ name: 'zeroData', type: 'Buffer', count: 8}
         ,{ name: 'name', type: 'String', count: 48}
-      ]
+      ],
+      startchain: true
     },
     5: { name: "PresetAmplifier" },
     6: { name: "PresetDistortion",
