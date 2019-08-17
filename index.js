@@ -28,7 +28,10 @@ class FuseDevice {
       if(messages[msgId]) {
         if(messages[msgId].args) {
           var messageData = msgProc.Process(messages[msgId], reader);
-          console.log(messageData);
+          //console.log(messageData.messageName);
+          if(messageData.messageName === "PresetAmplifier" && messageData.controlId === 0 && messageData.position === 0) {
+            console.log(messageData);
+          }
           if(messageData._startchain) {
             inChain = true;
             messageChain = [];
@@ -44,6 +47,8 @@ class FuseDevice {
             operators[messageData.messageName](messageData, messageChain);
             //console.log(devices);
             //console.log(JSON.stringify(devices, null, 4));
+          } else {
+            console.log('No operator:', messageData);
           }
         }
       } else {
@@ -161,6 +166,7 @@ if(devicePath) {
   var operators = {
     "ControlParameter" : (data) => {
       console.log('ControlParameter operator running..');
+      console.log(data);
       if(!devices[data.deviceId]) {
         devices[data.deviceId] = {};
         devices[data.deviceId].name = "unknown";
@@ -171,6 +177,14 @@ if(devicePath) {
           devices[data.deviceId].controls[data.controlIndex] = { label: "unknown" };
         }
         devices[data.deviceId].controls[data.controlIndex][obj] = data[obj];
+      }
+    },
+    "PresetComplete" : (data, chain) => {
+      //console.log('PresetComplete. Command chain:', chain);
+      for(var i = 0; i < chain.length; i++) {
+        if(chain[i].Name === "PresetAmplifier") {
+          console.log("PresetAmplifier", chain);
+        }
       }
     }
   }
@@ -193,7 +207,29 @@ if(devicePath) {
       ],
       startchain: true
     },
-    5: { name: "PresetAmplifier" },
+    5: { name: "PresetAmplifier",
+         args: [
+           { name: 'controlId', type: 'UInt8' }
+          ,{ name: 'position', type: 'UInt16LE' }
+          ,{ name: 'isModified', type: 'UInt8' }
+          ,{ name: 'isCurrent', type: 'UInt8' }
+          ,{ name: 'zeroData', type: 'Buffer', count: 8}
+          ,{ name: 'deviceId', type: 'UInt16LE' }
+          ,{ name: 'controlIndex', type: 'UInt8' }
+          ,{ name: 'expressionIndex', type: 'UInt8' }
+          ,{ name: 'tapIndex', type: 'UInt8' }
+          ,{ name: 'bypassMode', type: 'UInt16LE' }
+          ,{ name: 'bypass', type: 'UInt8' }
+          ,{ name: 'unknownData', type: 'Buffer', count: 8 }
+          ,{ name: 'volume2', type: 'UInt8' }
+          ,{ name: 'gain', type: 'UInt8' }
+          ,{ name: 'dial3', type: 'UInt8' }
+          ,{ name: 'dial4', type: 'UInt8' }
+          ,{ name: 'treble', type: 'UInt8' }
+          ,{ name: 'mid', type: 'UInt8' }
+          ,{ name: 'bass', type: 'UInt8' }
+          ,{ name: 'unknownData2', type: 'Buffer', count: 25 }
+         ] },
     6: { name: "PresetDistortion",
          args: [
            { name: 'controlId', type: 'UInt8' }
