@@ -202,8 +202,8 @@ if(devicePath) {
         ,{ name: 'position', type: 'UInt16LE' }
         ,{ name: 'isModified', type: 'UInt8' }
         ,{ name: 'isCurrent', type: 'UInt8' }
-        ,{ name: 'zeroData', type: 'Buffer', count: 8}
-        ,{ name: 'name', type: 'String', count: 48}
+        ,{ name: 'zeroData', type: 'Buffer', count: 8 }
+        ,{ name: 'name', type: 'String', count: 48 }
       ],
       startchain: true
     },
@@ -213,8 +213,8 @@ if(devicePath) {
           ,{ name: 'position', type: 'UInt16LE' }
           ,{ name: 'isModified', type: 'UInt8' }
           ,{ name: 'isCurrent', type: 'UInt8' }
-          ,{ name: 'zeroData', type: 'Buffer', count: 8}
-          ,{ name: 'deviceId', type: 'UInt16LE' }
+          ,{ name: 'zeroData', type: 'Buffer', count: 8 }
+          ,{ name: 'deviceId', type: 'UInt16LE' } // amplifier model
           ,{ name: 'controlIndex', type: 'UInt8' }
           ,{ name: 'expressionIndex', type: 'UInt8' }
           ,{ name: 'tapIndex', type: 'UInt8' }
@@ -223,12 +223,26 @@ if(devicePath) {
           ,{ name: 'unknownData', type: 'Buffer', count: 8 }
           ,{ name: 'volume2', type: 'UInt8' }
           ,{ name: 'gain', type: 'UInt8' }
-          ,{ name: 'dial3', type: 'UInt8' }
-          ,{ name: 'dial4', type: 'UInt8' }
+          ,{ name: 'dial3', type: 'UInt8' } // gain 2?
+          ,{ name: 'dial4', type: 'UInt8' } // master volume?
           ,{ name: 'treble', type: 'UInt8' }
           ,{ name: 'mid', type: 'UInt8' }
           ,{ name: 'bass', type: 'UInt8' }
-          ,{ name: 'unknownData2', type: 'Buffer', count: 25 }
+          ,{ name: 'presence', type: 'UInt8' } // ?
+          ,{ name: 'unknown0', type: 'UInt8' }
+          ,{ name: 'depth', type: 'UInt8' } // ?
+          ,{ name: 'bias', type: 'UInt8' } // ?
+          ,{ name: 'unknown1', type: 'UInt8' }
+          ,{ name: 'unknownData2', type: 'Buffer', count: 3 }
+          ,{ name: 'noiseGate', type: 'UInt8' }
+          ,{ name: 'threshold', type: 'UInt8' }
+          ,{ name: 'cabinet', type: 'UInt8' }
+          ,{ name: 'unknown2', type: 'UInt8' }
+          ,{ name: 'sag', type: 'UInt8' }
+          ,{ name: 'bright', type: 'UInt8' }
+          ,{ name: 'unknown3', type: 'UInt8' }
+          ,{ name: 'unknown4', type: 'UInt8' }
+          ,{ name: 'zeroData2', type: 'Buffer', count: 9 }
          ] },
     6: { name: "PresetDistortion",
          args: [
@@ -236,7 +250,7 @@ if(devicePath) {
           ,{ name: 'position', type: 'UInt16LE' }
           ,{ name: 'isModified', type: 'UInt8' }
           ,{ name: 'isCurrent', type: 'UInt8' }
-          ,{ name: 'zeroData', type: 'Buffer', count: 8}
+          ,{ name: 'zeroData', type: 'Buffer', count: 8 }
           ,{ name: 'deviceId', type: 'UInt16LE' }
           ,{ name: 'controlIndex', type: 'UInt8' }
           ,{ name: 'expressionIndex', type: 'UInt8' }
@@ -248,32 +262,32 @@ if(devicePath) {
     7: { name: "PresetModulation",
           args: [
             { name: 'controlId', type: 'UInt8' }
-          ,{ name: 'position', type: 'UInt16LE' }
-          ,{ name: 'isModified', type: 'UInt8' }
-          ,{ name: 'isCurrent', type: 'UInt8' }
-          ,{ name: 'zeroData', type: 'Buffer', count: 8}
-          ,{ name: 'deviceId', type: 'UInt16LE' }
-          ,{ name: 'controlIndex', type: 'UInt8' }
-          ,{ name: 'expressionIndex', type: 'UInt8' }
-          ,{ name: 'tapIndex', type: 'UInt8' }
-          ,{ name: 'bypassMode', type: 'UInt16LE' }
-          ,{ name: 'bypass', type: 'UInt8' }
-          ,{ name: 'finalData', type: 'Buffer', count: 40 }
+           ,{ name: 'position', type: 'UInt16LE' }
+           ,{ name: 'isModified', type: 'UInt8' }
+           ,{ name: 'isCurrent', type: 'UInt8' }
+           ,{ name: 'zeroData', type: 'Buffer', count: 8 }
+           ,{ name: 'deviceId', type: 'UInt16LE' }
+           ,{ name: 'controlIndex', type: 'UInt8' }
+           ,{ name: 'expressionIndex', type: 'UInt8' }
+           ,{ name: 'tapIndex', type: 'UInt8' }
+           ,{ name: 'bypassMode', type: 'UInt16LE' }
+           ,{ name: 'bypass', type: 'UInt8' }
+           ,{ name: 'finalData', type: 'Buffer', count: 40 }
           ] },
     8: { name: "PresetDelay",
           args: [
             { name: 'controlId', type: 'UInt8' }
-          ,{ name: 'position', type: 'UInt16LE' }
-          ,{ name: 'isModified', type: 'UInt8' }
-          ,{ name: 'isCurrent', type: 'UInt8' }
-          ,{ name: 'zeroData', type: 'Buffer', count: 8}
-          ,{ name: 'deviceId', type: 'UInt16LE' }
-          ,{ name: 'controlIndex', type: 'UInt8' }
-          ,{ name: 'expressionIndex', type: 'UInt8' }
-          ,{ name: 'tapIndex', type: 'UInt8' }
-          ,{ name: 'bypassMode', type: 'UInt16LE' }
-          ,{ name: 'bypass', type: 'UInt8' }
-          ,{ name: 'finalData', type: 'Buffer', count: 40 }
+           ,{ name: 'position', type: 'UInt16LE' }
+           ,{ name: 'isModified', type: 'UInt8' }
+           ,{ name: 'isCurrent', type: 'UInt8' }
+           ,{ name: 'zeroData', type: 'Buffer', count: 8}
+           ,{ name: 'deviceId', type: 'UInt16LE' }
+           ,{ name: 'controlIndex', type: 'UInt8' }
+           ,{ name: 'expressionIndex', type: 'UInt8' }
+           ,{ name: 'tapIndex', type: 'UInt8' }
+           ,{ name: 'bypassMode', type: 'UInt16LE' }
+           ,{ name: 'bypass', type: 'UInt8' }
+           ,{ name: 'finalData', type: 'Buffer', count: 40 }
           ] },
     9: { name: "PresetReverb",
           args: [
@@ -353,3 +367,18 @@ if(devicePath) {
   //sendBuffer(handshake3);
   var fDevice = new FuseDevice(device);
 }
+
+var modelNames = {
+  83 : "Fender 65 Deluxe Reverb",
+  100 : "Fender 59 Bassman",
+  103 : "Fender 57 Deluxe",
+  124 : "Fender 57 Champ",
+  106 : "Fender 65 Princeton",
+  117 : "Fender 65 Twin Reverb",
+  114 : "Fender Super Sonic",
+  97 : "British 60's",
+  121 : "British 70's",
+  94 : "British 80's",
+  93 : "American 90's",
+  109 : "Metal 2000"
+};
