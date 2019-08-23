@@ -28,10 +28,10 @@ class FuseDevice {
       if(messages[msgId]) {
         if(messages[msgId].args) {
           var messageData = msgProc.Process(messages[msgId], reader);
-          //console.log(messageData.messageName);
-          if(messageData.messageName === "PresetAmplifier" && messageData.controlId === 0 && messageData.position === 0) {
-            console.log(messageData);
-          }
+          //console.log("Message: " + messageData.messageName);
+          //if(messageData.messageName === "PresetAmplifier" && messageData.controlId === 0 && messageData.position === 0) {
+          //  console.log(messageData);
+          //}
           if(messageData._startchain) {
             inChain = true;
             messageChain = [];
@@ -158,9 +158,9 @@ if(devicePath) {
   };
 
   var devices = {
-    11 : { name: "reverb", controls: [{ label: "amount" }] },
-    22 : { name: "delay", controls: [{ label: "amount" }, { label: "tap" }] },
-    106 : { name: "amplifier", controls: [{ label: "volume" }, { label: "gain" }, { label: "unknown" }, { label: "unknown" }, { label: "treble" }, { label: "unknown" } , { label: "bass" } ] }
+    //11 : { name: "reverb", controls: [{ label: "amount" }] },
+    //22 : { name: "delay", controls: [{ label: "amount" }, { label: "tap" }] },
+    //106 : { name: "amplifier", controls: [{ label: "volume" }, { label: "gain" }, { label: "unknown" }, { label: "unknown" }, { label: "treble" }, { label: "unknown" } , { label: "bass" } ] }
   }
 
   var operators = {
@@ -179,11 +179,24 @@ if(devicePath) {
         devices[data.deviceId].controls[data.controlIndex][obj] = data[obj];
       }
     },
+    "PresetAmplifier" : (data) => {
+      console.log("PresetAmplifier-----------", data);
+    },
     "PresetComplete" : (data, chain) => {
       //console.log('PresetComplete. Command chain:', chain);
       for(var i = 0; i < chain.length; i++) {
-        if(chain[i].Name === "PresetAmplifier") {
-          console.log("PresetAmplifier", chain);
+        var presetName;
+        switch (chain[i].messageName) {
+          case "PresetName":
+            presetName = chain[i].name;
+            //console.log(chain[i].name);
+            break;
+          case "PresetAmplifier":
+            //console.log("PresetAmplifier", chain[i].position);
+            var patch = new fusePatch(presetName);
+            patches[chain[i].position] = patch;
+            console.log(patches);
+            break;
         }
       }
     }
@@ -404,3 +417,12 @@ var modelNames = {
   31 : 'Pitch Shifer'
 
 };
+
+class fusePatch {
+  constructor(name) {
+    this.Name = name;
+    this.Modules = [];
+  }
+}
+
+var patches = [];
