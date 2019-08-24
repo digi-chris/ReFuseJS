@@ -1,3 +1,4 @@
+const util = require('util')
 var HID = require('node-hid');
 var BufferReader = require('buffer-reader');
 var devices = HID.devices();
@@ -184,8 +185,10 @@ if(devicePath) {
     },
     "PresetComplete" : (data, chain) => {
       //console.log('PresetComplete. Command chain:', chain);
+      console.log('----- Start of chain -----');
       for(var i = 0; i < chain.length; i++) {
         var presetName;
+        //console.log(chain[i].messageName);
         switch (chain[i].messageName) {
           case "PresetName":
             presetName = chain[i].name;
@@ -194,11 +197,13 @@ if(devicePath) {
           case "PresetAmplifier":
             //console.log("PresetAmplifier", chain[i].position);
             var patch = new fusePatch(presetName);
+            patch.AddModule(new fuseModule(chain[i]));
             patches[chain[i].position] = patch;
-            console.log(patches);
+            console.log(util.inspect(patches, {showHidden: false, depth: null}));
             break;
         }
       }
+      console.log('----- End of chain -----');
     }
   }
 
@@ -422,6 +427,16 @@ class fusePatch {
   constructor(name) {
     this.Name = name;
     this.Modules = [];
+  }
+
+  AddModule(module) {
+    this.Modules.push(module);
+  }
+}
+
+class fuseModule {
+  constructor(data) {
+    this.Type = data.presetMessageType;
   }
 }
 
