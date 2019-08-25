@@ -12,7 +12,50 @@ class MessageProcessor {
     }
 
     Build (msgObj) {
+        if(msgObj.__data) {
+            var msgId = msgObj.__data[0];
+            var flags = msgObj.__data[1];
 
+            var buf = new Buffer();
+            buf.writeUInt8(msgId);
+            buf.writeUInt8(flags);
+
+            var buildMessage = function(buf, messageType) {
+                var messageArgs = messageType.args;
+                if(messageArgs) {
+                    for(var i = 0; i < messageArgs.length; i++) {
+                      switch(messageArgs[i].type) {
+                          case "Buffer":
+                              var array = msgObj[messageArgs[i].name];
+                              var bytes = messageArgs[i].count;
+                              for(var i = 0; i < array.length; i++) {
+                                  buf.writeUInt8(array[i]);
+                              }
+                              var bytesRemaining = bytes - array.length;
+                              for(var i = 0; i < bytesRemaining; i++) {
+                                  buf.writeUInt8(0);
+                              }
+                              break;
+                          case "String":
+                              var bytes = messageArgs[i].count;
+                              var bytesRemaining = bytes = msgObj[messageArgs[i].name].length;
+                              buf.write(msgObj[messageArgs[i].name]);
+                              for(var i = 0; i < bytesRemaining; i++) {
+                                  buf.writeUInt8(0);
+                              }
+                              break;
+                          default:
+                              buf["write" + messageArgs[i].type](msgObj[messageArgs[i].name]);
+                              break;
+                      }
+                    }
+                }
+            };
+
+            if(messages[msgId]) {
+                buildMessage(buf, messages[msgId]);
+            }
+        }
     }
 
     ReadMessage(data) {
