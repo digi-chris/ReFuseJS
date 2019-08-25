@@ -78,23 +78,7 @@ for(var i = 0; i < devices.length; i++) {
 
 if(devicePath) {
   var device = new HID.HID(devicePath);
-
   console.log(device);
-
-  // var handshake = Array(64).fill(0x00);
-  // handshake[1] = 0xC3;
-  // sendBuffer(handshake);
-  // console.log("Handshake: " + new Buffer.from(device.readSync()).toString('ascii'));
-
-  // var handshake2 = Array(64).fill(0x00);
-  // handshake2[0] = 0x1A;
-  // handshake2[1] = 0xC1;
-  // sendBuffer(handshake2);
-  // console.log("Handshake 2: " + new Buffer.from(device.readSync()).toString('ascii'));
-
-  // var handshake3 = Array(64).fill(0x00);
-  // handshake3[0] = 0xFF;
-  // handshake3[1] = 0xC1;
 
   var effectTypes = {
     0 : { id: 0, name: "unknown" },
@@ -445,10 +429,11 @@ class fuseModule {
       //console.log("Adding property " + propertyName);
       Object.defineProperty(tobj, propertyName, {
         get : () => {
-          return data[propertyName];
+          return data.__data[data.__propertyIndex[propertyName]];
         },
         set : (value) => {
-          data[propertyName] = value;
+          //data[propertyName] = value;
+          data.__data[data.__propertyIndex[propertyName]] = value;
         },
         enumerable: true
       });

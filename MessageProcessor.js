@@ -22,7 +22,7 @@ class MessageProcessor {
         
         if(messages[msgId]) {
             if(messages[msgId].args) {
-                var messageData = process(messages[msgId], reader, { __data : [ msgId, flags ] });
+                var messageData = process(messages[msgId], reader, { __data : [ msgId, flags ], __propertyIndex : { } });
                 if(messageData._startchain) {
                     inChain = true;
                     messageChain = [];
@@ -59,18 +59,18 @@ module.exports = MessageProcessor;
 
 function process (messageType, reader, msgObj) {
     var messageArgs = messageType.args;
-    if(!msgObj) {
-      msgObj = { __data : [] };
-    }
+    //if(!msgObj) {
+    //    msgObj = { __data : [] };
+    //}
     msgObj.messageName = messageType.name;
     if(messageType.startchain) {
-      msgObj._startchain = true;
+        msgObj._startchain = true;
     }
     if(messageType.endchain) {
-      msgObj._endchain = true;
+        msgObj._endchain = true;
     }
     if(messageArgs) {
-      for(var i = 0; i < messageArgs.length; i++) {
+        for(var i = 0; i < messageArgs.length; i++) {
           switch(messageArgs[i].type) {
               case "Buffer":
                   msgObj[messageArgs[i].name] = reader.nextBuffer(messageArgs[i].count);
@@ -82,6 +82,7 @@ function process (messageType, reader, msgObj) {
                   msgObj[messageArgs[i].name] = reader['next' + messageArgs[i].type]();
                   break;
           }
+          msgObj.__propertyIndex[messageArgs[i].name] = msgObj.__data.length;
           msgObj.__data.push(msgObj[messageArgs[i].name]);
           if(messageArgs[i].lookup) {
               msgObj[messageArgs[i].name] = messageArgs[i].lookup[msgObj[messageArgs[i].name]];
@@ -100,7 +101,7 @@ function process (messageType, reader, msgObj) {
           if(messageArgs[i].ignore) {
               delete msgObj[messageArgs[i].name];
           }
-      }
+        }
     }
     return msgObj;
-  }
+}
