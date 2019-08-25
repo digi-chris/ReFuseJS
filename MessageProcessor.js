@@ -17,16 +17,16 @@ class MessageProcessor {
       }
       if(messageArgs) {
         for(var i = 0; i < messageArgs.length; i++) {
-          switch(messageArgs[i].type) {
-            case "Buffer":
-              msgObj[messageArgs[i].name] = reader.nextBuffer(messageArgs[i].count);
-              break;
-            case "String":
-                msgObj[messageArgs[i].name] = reader.nextString(messageArgs[i].count).replace(/\0/g, '');
-              break;
-            default:
-              msgObj[messageArgs[i].name] = reader['next' + messageArgs[i].type]();
-              break;
+            switch(messageArgs[i].type) {
+                case "Buffer":
+                msgObj[messageArgs[i].name] = reader.nextBuffer(messageArgs[i].count);
+                break;
+                case "String":
+                    msgObj[messageArgs[i].name] = reader.nextString(messageArgs[i].count).replace(/\0/g, '');
+                break;
+                default:
+                msgObj[messageArgs[i].name] = reader['next' + messageArgs[i].type]();
+                break;
           }
           if(messageArgs[i].lookup) {
             msgObj[messageArgs[i].name] = messageArgs[i].lookup[msgObj[messageArgs[i].name]];
@@ -41,6 +41,9 @@ class MessageProcessor {
               msgObj = this.Process(followOnObj[followOnId], reader, msgObj);
               //console.log('followOn response:', msgObj);
             }
+          }
+          if(messageArgs[i].ignore) {
+              delete msgObj[messageArgs[i].name];
           }
         }
       }

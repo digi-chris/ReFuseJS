@@ -231,14 +231,14 @@ if(devicePath) {
           ,{ name: 'position', type: 'UInt16LE' }
           ,{ name: 'isModified', type: 'UInt8' }
           ,{ name: 'isCurrent', type: 'UInt8' }
-          ,{ name: 'zeroData', type: 'Buffer', count: 8 }
+          ,{ name: 'zeroData', type: 'Buffer', count: 8, ignore: true }
           ,{ name: 'deviceId', type: 'UInt16LE' } // amplifier model
           ,{ name: 'controlIndex', type: 'UInt8' }
           ,{ name: 'expressionIndex', type: 'UInt8' }
           ,{ name: 'tapIndex', type: 'UInt8' }
           ,{ name: 'bypassMode', type: 'UInt16LE' }
           ,{ name: 'bypass', type: 'UInt8' }
-          ,{ name: 'unknownData', type: 'Buffer', count: 8 }
+          ,{ name: 'unknownData', type: 'Buffer', count: 8, ignore: true }
           ,{ name: 'volume2', type: 'UInt8' }
           ,{ name: 'gain', type: 'UInt8' }
           ,{ name: 'dial3', type: 'UInt8' } // gain 2?
@@ -247,20 +247,20 @@ if(devicePath) {
           ,{ name: 'mid', type: 'UInt8' }
           ,{ name: 'bass', type: 'UInt8' }
           ,{ name: 'presence', type: 'UInt8' } // ?
-          ,{ name: 'unknown0', type: 'UInt8' }
+          ,{ name: 'unknown0', type: 'UInt8', ignore: true }
           ,{ name: 'depth', type: 'UInt8' } // ?
           ,{ name: 'bias', type: 'UInt8' } // ?
-          ,{ name: 'unknown1', type: 'UInt8' }
-          ,{ name: 'unknownData2', type: 'Buffer', count: 3 }
+          ,{ name: 'unknown1', type: 'UInt8', ignore: true }
+          ,{ name: 'unknownData2', type: 'Buffer', count: 3, ignore: true }
           ,{ name: 'noiseGate', type: 'UInt8' }
           ,{ name: 'threshold', type: 'UInt8' }
           ,{ name: 'cabinet', type: 'UInt8' }
-          ,{ name: 'unknown2', type: 'UInt8' }
+          ,{ name: 'unknown2', type: 'UInt8', ignore: true }
           ,{ name: 'sag', type: 'UInt8' }
           ,{ name: 'bright', type: 'UInt8' }
-          ,{ name: 'unknown3', type: 'UInt8' }
-          ,{ name: 'unknown4', type: 'UInt8' }
-          ,{ name: 'zeroData2', type: 'Buffer', count: 9 }
+          ,{ name: 'unknown3', type: 'UInt8', ignore: true }
+          ,{ name: 'unknown4', type: 'UInt8', ignore: true }
+          ,{ name: 'zeroData2', type: 'Buffer', count: 9, ignore: true }
          ] },
     6: { name: "PresetDistortion",
          args: [
@@ -437,6 +437,8 @@ class fusePatch {
 class fuseModule {
   constructor(data) {
     this.Type = data.presetMessageType;
+    console.log('fuseModule');
+    console.log(data);
   }
 }
 
