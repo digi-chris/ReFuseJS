@@ -461,6 +461,12 @@ class fuseModule {
     for(var obj in data) {
       addProperty(obj);
     }
+
+    if(this.deviceId) {
+      if(modelNames[this.deviceId]) {
+        this.modelName = modelNames[this.deviceId];
+      }
+    }
   }
 }
 
