@@ -1,4 +1,5 @@
-const util = require('util')
+const util = require('util');
+util.inspect.defaultOptions.showHidden = true;
 var HID = require('node-hid');
 var BufferReader = require('buffer-reader');
 var devices = HID.devices();
@@ -199,7 +200,8 @@ if(devicePath) {
             var patch = new fusePatch(presetName);
             patch.AddModule(new fuseModule(chain[i]));
             patches[chain[i].position] = patch;
-            console.log(util.inspect(patches, {showHidden: false, depth: null}));
+            //console.log(util.inspect(patches, {showHidden: false, depth: null}));
+            console.log(JSON.stringify(patches));
             break;
         }
       }
@@ -436,10 +438,57 @@ class fusePatch {
 
 class fuseModule {
   constructor(data) {
+    var tobj = this;
     this.Type = data.presetMessageType;
-    console.log('fuseModule');
-    console.log(data);
+    //this.Parameters = {};
+    //console.log('fuseModule');
+    //console.log(data);
+    var addProperty = (propertyName) => {
+      //console.log("Adding property " + propertyName);
+      Object.defineProperty(tobj, propertyName, {
+        get : () => {
+          return data[propertyName];
+        },
+        set : (value) => {
+          data[propertyName] = value;
+        },
+        enumerable: true
+      });
+      //tobj[propertyName] = data[propertyName];
+      //console.log(tobj[propertyName]);
+    };
+
+    for(var obj in data) {
+      addProperty(obj);
+    }
   }
 }
 
+// function fuseModule(data) {
+//   var tobj = this;
+//   var addProperty = (propertyName) => {
+//     //console.log("Adding property " + propertyName);
+//     Object.defineProperty(tobj, propertyName, {
+//       get : () => {
+//         return data[propertyName];
+//       },
+//       set : (value) => {
+//         console.log('setting property');
+//         data[propertyName] = value;
+//       }
+//     });
+//     //tobj[propertyName] = data[propertyName];
+//     //console.log(tobj[propertyName]);
+//   };
+
+//   for(var obj in data) {
+//     addProperty(obj);
+//   }
+// }
+
 var patches = [];
+
+//var testobj = {};
+//Object.defineProperty(testobj, 'test', { value: 'testing' });
+//console.log('TESTING-----------------------------');
+//console.log(testobj);
