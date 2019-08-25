@@ -1,18 +1,17 @@
 const util = require('util');
-util.inspect.defaultOptions.showHidden = true;
 var HID = require('node-hid');
 var BufferReader = require('buffer-reader');
 var devices = HID.devices();
 var MessageProcessor = require('./MessageProcessor.js');
 const os = require('os');
 
-var messageChain = [];
-var inChain = false;
+//var messageChain = [];
+//var inChain = false;
 class FuseDevice {
   constructor(usbDevice) {
     this.Devices = {};
     this.Presets = [];
-    var msgProc = new MessageProcessor(this);
+    var msgProc = new MessageProcessor(this, messages, operators);
     //msgProc["PresetMessage"]();
     //console.log(msgProc);
     //console.log(MessageProcessor);
@@ -23,32 +22,24 @@ class FuseDevice {
       device.write(buffer);
     }
 
-    usbDevice.on("data", function(data) {
+    usbDevice.on("data", msgProc.ReadMessage); /*function(data) {
       var reader = new BufferReader(data);
       var msgId = reader.nextUInt8();
       var flags = reader.nextUInt8();
       if(messages[msgId]) {
         if(messages[msgId].args) {
           var messageData = msgProc.Process(messages[msgId], reader);
-          //console.log("Message: " + messageData.messageName);
-          //if(messageData.messageName === "PresetAmplifier" && messageData.controlId === 0 && messageData.position === 0) {
-          //  console.log(messageData);
-          //}
           if(messageData._startchain) {
             inChain = true;
             messageChain = [];
           }
           if(messageData._endchain) {
             inChain = false;
-            //console.log('Chained message:');
-            //console.log(messageChain);
           }
           if(inChain) {
             messageChain.push(messageData);
           } else if(operators[messageData.messageName]) {
             operators[messageData.messageName](messageData, messageChain);
-            //console.log(devices);
-            //console.log(JSON.stringify(devices, null, 4));
           } else {
             console.log('No operator:', messageData);
           }
@@ -56,7 +47,7 @@ class FuseDevice {
       } else {
           console.log("Unknown message: " + msgId);
       }
-    });
+    });*/
 
     var handshake = Array(64).fill(0x00);
     handshake[1] = 0xC3;
@@ -186,7 +177,7 @@ if(devicePath) {
     },
     "PresetComplete" : (data, chain) => {
       //console.log('PresetComplete. Command chain:', chain);
-      console.log('----- Start of chain -----');
+      //console.log('----- Start of chain -----');
       for(var i = 0; i < chain.length; i++) {
         var presetName;
         //console.log(chain[i].messageName);
@@ -200,12 +191,19 @@ if(devicePath) {
             var patch = new fusePatch(presetName);
             patch.AddModule(new fuseModule(chain[i]));
             patches[chain[i].position] = patch;
-            //console.log(util.inspect(patches, {showHidden: false, depth: null}));
-            console.log(JSON.stringify(patches));
+            console.log(JSON.parse(JSON.stringify(patch)));
+            //if(patch.Name === '') {
+            //  console.log(util.inspect(JSON.parse(JSON.stringify(patch)), {depth: null}));
+            //}
+            //console.log(util.inspect(patch, {showHidden: false, depth: null}));
+            //console.log(JSON.stringify(patches));
             break;
+          default:
+            //console.log('Not processed: ' + chain[i].messageName);
+
         }
       }
-      console.log('----- End of chain -----');
+      //console.log('----- End of chain -----');
     }
   }
 
@@ -233,36 +231,36 @@ if(devicePath) {
           ,{ name: 'position', type: 'UInt16LE' }
           ,{ name: 'isModified', type: 'UInt8' }
           ,{ name: 'isCurrent', type: 'UInt8' }
-          ,{ name: 'zeroData', type: 'Buffer', count: 8, ignore: true }
-          ,{ name: 'deviceId', type: 'UInt16LE' } // amplifier model
+          ,{ name: 'zeroData', type: 'Buffer', count: 8, ignore: false }
+          ,{ name: 'modelId', type: 'UInt16LE' } // amplifier model
           ,{ name: 'controlIndex', type: 'UInt8' }
           ,{ name: 'expressionIndex', type: 'UInt8' }
           ,{ name: 'tapIndex', type: 'UInt8' }
           ,{ name: 'bypassMode', type: 'UInt16LE' }
           ,{ name: 'bypass', type: 'UInt8' }
-          ,{ name: 'unknownData', type: 'Buffer', count: 8, ignore: true }
+          ,{ name: 'unknownData', type: 'Buffer', count: 8, ignore: false }
           ,{ name: 'volume2', type: 'UInt8' }
           ,{ name: 'gain', type: 'UInt8' }
-          ,{ name: 'dial3', type: 'UInt8' } // gain 2?
-          ,{ name: 'dial4', type: 'UInt8' } // master volume?
+          ,{ name: 'gain2', type: 'UInt8' } // gain 2?
+          ,{ name: 'masterVolume', type: 'UInt8' } // master volume?
           ,{ name: 'treble', type: 'UInt8' }
           ,{ name: 'mid', type: 'UInt8' }
           ,{ name: 'bass', type: 'UInt8' }
           ,{ name: 'presence', type: 'UInt8' } // ?
-          ,{ name: 'unknown0', type: 'UInt8', ignore: true }
+          ,{ name: 'unknown0', type: 'UInt8', ignore: false }
           ,{ name: 'depth', type: 'UInt8' } // ?
           ,{ name: 'bias', type: 'UInt8' } // ?
-          ,{ name: 'unknown1', type: 'UInt8', ignore: true }
-          ,{ name: 'unknownData2', type: 'Buffer', count: 3, ignore: true }
+          ,{ name: 'unknown1', type: 'UInt8', ignore: false }
+          ,{ name: 'unknownData2', type: 'Buffer', count: 3, ignore: false }
           ,{ name: 'noiseGate', type: 'UInt8' }
           ,{ name: 'threshold', type: 'UInt8' }
           ,{ name: 'cabinet', type: 'UInt8' }
-          ,{ name: 'unknown2', type: 'UInt8', ignore: true }
+          ,{ name: 'unknown2', type: 'UInt8', ignore: false }
           ,{ name: 'sag', type: 'UInt8' }
           ,{ name: 'bright', type: 'UInt8' }
-          ,{ name: 'unknown3', type: 'UInt8', ignore: true }
-          ,{ name: 'unknown4', type: 'UInt8', ignore: true }
-          ,{ name: 'zeroData2', type: 'Buffer', count: 9, ignore: true }
+          ,{ name: 'unknown3', type: 'UInt8', ignore: false }
+          ,{ name: 'unknown4', type: 'UInt8', ignore: false }
+          ,{ name: 'zeroData2', type: 'Buffer', count: 9, ignore: false }
          ] },
     6: { name: "PresetDistortion",
          args: [
@@ -271,7 +269,7 @@ if(devicePath) {
           ,{ name: 'isModified', type: 'UInt8' }
           ,{ name: 'isCurrent', type: 'UInt8' }
           ,{ name: 'zeroData', type: 'Buffer', count: 8 }
-          ,{ name: 'deviceId', type: 'UInt16LE' }
+          ,{ name: 'modelId', type: 'UInt16LE' }
           ,{ name: 'controlIndex', type: 'UInt8' }
           ,{ name: 'expressionIndex', type: 'UInt8' }
           ,{ name: 'tapIndex', type: 'UInt8' }
@@ -286,7 +284,7 @@ if(devicePath) {
            ,{ name: 'isModified', type: 'UInt8' }
            ,{ name: 'isCurrent', type: 'UInt8' }
            ,{ name: 'zeroData', type: 'Buffer', count: 8 }
-           ,{ name: 'deviceId', type: 'UInt16LE' }
+           ,{ name: 'modelId', type: 'UInt16LE' }
            ,{ name: 'controlIndex', type: 'UInt8' }
            ,{ name: 'expressionIndex', type: 'UInt8' }
            ,{ name: 'tapIndex', type: 'UInt8' }
@@ -301,7 +299,7 @@ if(devicePath) {
            ,{ name: 'isModified', type: 'UInt8' }
            ,{ name: 'isCurrent', type: 'UInt8' }
            ,{ name: 'zeroData', type: 'Buffer', count: 8}
-           ,{ name: 'deviceId', type: 'UInt16LE' }
+           ,{ name: 'modelId', type: 'UInt16LE' }
            ,{ name: 'controlIndex', type: 'UInt8' }
            ,{ name: 'expressionIndex', type: 'UInt8' }
            ,{ name: 'tapIndex', type: 'UInt8' }
@@ -316,7 +314,7 @@ if(devicePath) {
           ,{ name: 'isModified', type: 'UInt8' }
           ,{ name: 'isCurrent', type: 'UInt8' }
           ,{ name: 'zeroData', type: 'Buffer', count: 8}
-          ,{ name: 'deviceId', type: 'UInt16LE' }
+          ,{ name: 'modelId', type: 'UInt16LE' }
           ,{ name: 'controlIndex', type: 'UInt8' }
           ,{ name: 'expressionIndex', type: 'UInt8' }
           ,{ name: 'tapIndex', type: 'UInt8' }
@@ -462,9 +460,9 @@ class fuseModule {
       addProperty(obj);
     }
 
-    if(this.deviceId) {
-      if(modelNames[this.deviceId]) {
-        this.modelName = modelNames[this.deviceId];
+    if(this.modelId) {
+      if(modelNames[this.modelId]) {
+        this.modelName = modelNames[this.modelId];
       }
     }
   }
