@@ -12,6 +12,7 @@ class MessageProcessor {
     }
 
     Build (msgObj) {
+        console.log(msgObj);
         if(msgObj.__data) {
             var msgId = msgObj.__data[0];
             var flags = msgObj.__data[1];
@@ -24,30 +25,37 @@ class MessageProcessor {
                 var messageArgs = messageType.args;
                 if(messageArgs) {
                     for(var i = 0; i < messageArgs.length; i++) {
-                      switch(messageArgs[i].type) {
-                          case "Buffer":
-                              var array = msgObj[messageArgs[i].name];
-                              var bytes = messageArgs[i].count;
-                              for(var i = 0; i < array.length; i++) {
-                                  buf.writeUInt8(array[i]);
-                              }
-                              var bytesRemaining = bytes - array.length;
-                              for(var i = 0; i < bytesRemaining; i++) {
-                                  buf.writeUInt8(0);
-                              }
-                              break;
-                          case "String":
-                              var bytes = messageArgs[i].count;
-                              var bytesRemaining = bytes = msgObj[messageArgs[i].name].length;
-                              buf.write(msgObj[messageArgs[i].name]);
-                              for(var i = 0; i < bytesRemaining; i++) {
-                                  buf.writeUInt8(0);
-                              }
-                              break;
-                          default:
-                              buf["write" + messageArgs[i].type](msgObj[messageArgs[i].name]);
-                              break;
-                      }
+                        switch(messageArgs[i].type) {
+                            case "Buffer":
+                                var array = msgObj[messageArgs[i].name];
+                                var bytes = messageArgs[i].count;
+                                for(var i = 0; i < array.length; i++) {
+                                    buf.writeUInt8(array[i]);
+                                }
+                                var bytesRemaining = bytes - array.length;
+                                for(var i = 0; i < bytesRemaining; i++) {
+                                    buf.writeUInt8(0);
+                                }
+                                break;
+                            case "String":
+                                var bytes = messageArgs[i].count;
+                                var bytesRemaining = bytes = msgObj[messageArgs[i].name].length;
+                                buf.write(msgObj[messageArgs[i].name]);
+                                for(var i = 0; i < bytesRemaining; i++) {
+                                    buf.writeUInt8(0);
+                                }
+                                break;
+                            default:
+                                buf["write" + messageArgs[i].type](msgObj[messageArgs[i].name]);
+                                break;
+                        }
+
+                        if(messageArgs[i].followon) {
+                            if(messageArgs[i].followon[msgObj[messageArgs[i].name]]) {
+                                messageArgs = messageArgs[i].followon[msgObj[messageArgs[i].name]].args;
+                                i = 0;
+                            }
+                        }
                     }
                 }
             };
@@ -55,6 +63,9 @@ class MessageProcessor {
             if(messages[msgId]) {
                 buildMessage(buf, messages[msgId]);
             }
+
+            console.log('message built', msgId);
+            console.log(buf);
         }
     }
 

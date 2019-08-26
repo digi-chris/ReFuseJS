@@ -4,6 +4,7 @@ var BufferReader = require('buffer-reader');
 var devices = HID.devices();
 var MessageProcessor = require('./MessageProcessor.js');
 const os = require('os');
+var msgProc;
 
 //var messageChain = [];
 //var inChain = false;
@@ -11,7 +12,7 @@ class FuseDevice {
   constructor(usbDevice) {
     this.Devices = {};
     this.Presets = [];
-    var msgProc = new MessageProcessor(this, messages, operators);
+    msgProc = new MessageProcessor(this, messages, operators);
     //msgProc["PresetMessage"]();
     //console.log(msgProc);
     //console.log(MessageProcessor);
@@ -175,10 +176,12 @@ if(devicePath) {
             var patch = new fusePatch(presetName);
             patch.AddModule(new fuseModule(chain[i]));
             patches[chain[i].position] = patch;
-            console.log(JSON.parse(JSON.stringify(patch)));
-            //if(patch.Name === '') {
+            //console.log(JSON.parse(JSON.stringify(patch)));
+            if(patch.Name === '') {
             //  console.log(util.inspect(JSON.parse(JSON.stringify(patch)), {depth: null}));
-            //}
+              console.log('running build...');
+              msgProc.Build(chain[i]);
+            }
             //console.log(util.inspect(patch, {showHidden: false, depth: null}));
             //console.log(JSON.stringify(patches));
             break;
