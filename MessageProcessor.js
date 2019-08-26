@@ -84,7 +84,7 @@ class MessageProcessor {
         
         if(messages[msgId]) {
             if(messages[msgId].args) {
-                var messageData = process(messages[msgId], reader, { __data : [ msgId, flags ], __propertyIndex : { } });
+                var messageData = process(messages[msgId], reader, { __data : [ msgId, flags ], __propertyIndex : { }, __private : { } });
                 if(messageData._startchain) {
                     inChain = true;
                     messageChain = [];
@@ -160,8 +160,8 @@ function process (messageType, reader, msgObj) {
                   //console.log('followOn response:', msgObj);
               }
           }
-          if(messageArgs[i].ignore) {
-              delete msgObj[messageArgs[i].name];
+          if(messageArgs[i].private) {
+              msgObj.__private[messageArgs[i].name] = true;
           }
         }
     }
