@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "buffer-reader": "^0.1.0",
+    "express": "^4.17.1",
     "node-hid": "^0.7.9"
   }
 }

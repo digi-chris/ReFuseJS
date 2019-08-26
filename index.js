@@ -1,10 +1,14 @@
 const util = require('util');
+var express = require('express');
 var HID = require('node-hid');
 var BufferReader = require('buffer-reader');
 var devices = HID.devices();
 var MessageProcessor = require('./MessageProcessor.js');
 const os = require('os');
 var msgProc;
+var app = express();
+
+
 
 //var messageChain = [];
 //var inChain = false;
@@ -164,6 +168,11 @@ if(devicePath) {
       //console.log('PresetComplete. Command chain:', chain);
       //console.log('----- Start of chain -----');
       for(var i = 0; i < chain.length; i++) {
+        //if(chain[i].controlId === 0) {
+        //  console.log('chain ' + i + ' ---------------');
+        //  console.log(chain[i]);
+        //  console.log('-------------------------------');
+        //}
         var presetName;
         //console.log(chain[i].messageName);
         switch (chain[i].messageName) {
@@ -172,16 +181,16 @@ if(devicePath) {
             //console.log(chain[i].name);
             break;
           case "PresetAmplifier":
-            //console.log("PresetAmplifier", chain[i].position);
+            //console.log("PresetAmplifier", chain[i]);
             var patch = new fusePatch(presetName);
             patch.AddModule(new fuseModule(chain[i]));
             patches[chain[i].position] = patch;
             //console.log(JSON.parse(JSON.stringify(patch)));
-            if(patch.Name === '') {
-            //  console.log(util.inspect(JSON.parse(JSON.stringify(patch)), {depth: null}));
-              console.log('running build...');
-              msgProc.Build(chain[i]);
-            }
+            //if(patch.Name === '') {
+              //console.log(util.inspect(JSON.parse(JSON.stringify(patch)), {depth: null}));
+              //console.log('running build...');
+              //msgProc.Build(chain[i]);
+            //}
             //console.log(util.inspect(patch, {showHidden: false, depth: null}));
             //console.log(JSON.stringify(patches));
             break;
@@ -484,3 +493,10 @@ var patches = [];
 //Object.defineProperty(testobj, 'test', { value: 'testing' });
 //console.log('TESTING-----------------------------');
 //console.log(testobj);
+
+app.route('/patches')
+  .get(function (req, res, next) {
+    res.json(patches);
+  });
+
+app.listen(3000);
