@@ -17,47 +17,55 @@ class MessageProcessor {
             var msgId = msgObj.__data[0];
             var flags = msgObj.__data[1];
 
-            var buf = new Buffer();
-            buf.writeUInt8(msgId);
-            buf.writeUInt8(flags);
+            var buf = Buffer.alloc(64);
+            buf.writeUInt8(msgId, 0);
+            buf.writeUInt8(flags, 1);
+
+            var position = 2;
 
             var buildMessage = function(buf, messageType) {
                 var messageArgs = messageType.args;
                 if(messageArgs) {
                     for(var i = 0; i < messageArgs.length; i++) {
+                        console.log(messageArgs[i].name, i);
                         switch(messageArgs[i].type) {
                             case "Buffer":
                                 var array = msgObj[messageArgs[i].name];
                                 var bytes = messageArgs[i].count;
-                                for(var i = 0; i < array.length; i++) {
-                                    buf.writeUInt8(array[i]);
+                                for(var j = 0; j < array.length; j++) {
+                                    position = buf.writeUInt8(array[j], position);
                                 }
                                 var bytesRemaining = bytes - array.length;
-                                for(var i = 0; i < bytesRemaining; i++) {
-                                    buf.writeUInt8(0);
+                                for(var j = 0; j < bytesRemaining; j++) {
+                                    position = buf.writeUInt8(0, position);
                                 }
                                 break;
                             case "String":
                                 var bytes = messageArgs[i].count;
                                 var bytesRemaining = bytes = msgObj[messageArgs[i].name].length;
-                                buf.write(msgObj[messageArgs[i].name]);
-                                for(var i = 0; i < bytesRemaining; i++) {
-                                    buf.writeUInt8(0);
+                                position = buf.write(msgObj[messageArgs[i].name], position);
+                                //position += bytes;
+                                for(var j = 0; j < bytesRemaining; j++) {
+                                    position = buf.writeUInt8(0, position);
                                 }
                                 break;
                             default:
-                                buf["write" + messageArgs[i].type](msgObj[messageArgs[i].name]);
+                                position = buf["write" + messageArgs[i].type](msgObj[messageArgs[i].name], position);
                                 break;
                         }
 
                         if(messageArgs[i].followon) {
                             if(messageArgs[i].followon[msgObj[messageArgs[i].name]]) {
+                                console.log('found followon - ' + messageArgs[i].followon[msgObj[messageArgs[i].name]].args);
                                 messageArgs = messageArgs[i].followon[msgObj[messageArgs[i].name]].args;
+                                console.log(messageArgs.length);
                                 i = 0;
                             }
                         }
                     }
                 }
+
+                console.log('finished buildMsg');
             };
 
             if(messages[msgId]) {
