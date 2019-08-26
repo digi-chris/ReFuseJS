@@ -494,9 +494,16 @@ var patches = [];
 //console.log('TESTING-----------------------------');
 //console.log(testobj);
 
-app.route('/patches')
-  .get(function (req, res, next) {
-    res.json(patches);
-  });
+app.get('/patches', function (req, res) {
+  res.json(patches);
+});
+
+app.get('/patches/:patchId', function(req, res) {
+  //res.send('');
+  console.log(req.params);
+  if(req.params.patchId) {
+    res.json(patches[req.params.patchId]);
+  }
+});
 
 app.listen(3000);
