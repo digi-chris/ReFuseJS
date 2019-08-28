@@ -3,76 +3,12 @@ var express = require('express');
 var HID = require('node-hid');
 var BufferReader = require('buffer-reader');
 var devices = HID.devices();
+var FuseDevice = require('./FuseDevice.js');
 var MessageProcessor = require('./MessageProcessor.js');
 const os = require('os');
-var msgProc;
+//var msgProc;
 var app = express();
 
-
-
-//var messageChain = [];
-//var inChain = false;
-class FuseDevice {
-  constructor(usbDevice) {
-    this.Devices = {};
-    this.Presets = [];
-    msgProc = new MessageProcessor(this, messages, operators);
-    //msgProc["PresetMessage"]();
-    //console.log(msgProc);
-    //console.log(MessageProcessor);
-    function sendBuffer(buffer) {
-      if(os.platform() === "win32") {
-          buffer.unshift(0);
-      }
-      device.write(buffer);
-    }
-
-    usbDevice.on("data", msgProc.ReadMessage); /*function(data) {
-      var reader = new BufferReader(data);
-      var msgId = reader.nextUInt8();
-      var flags = reader.nextUInt8();
-      if(messages[msgId]) {
-        if(messages[msgId].args) {
-          var messageData = msgProc.Process(messages[msgId], reader);
-          if(messageData._startchain) {
-            inChain = true;
-            messageChain = [];
-          }
-          if(messageData._endchain) {
-            inChain = false;
-          }
-          if(inChain) {
-            messageChain.push(messageData);
-          } else if(operators[messageData.messageName]) {
-            operators[messageData.messageName](messageData, messageChain);
-          } else {
-            console.log('No operator:', messageData);
-          }
-        }
-      } else {
-          console.log("Unknown message: " + msgId);
-      }
-    });*/
-
-    var handshake = Array(64).fill(0x00);
-    handshake[1] = 0xC3;
-    sendBuffer(handshake);
-    console.log("Handshake: " + new Buffer.from(device.readSync()).toString('ascii'));
-  
-    var handshake2 = Array(64).fill(0x00);
-    handshake2[0] = 0x1A;
-    handshake2[1] = 0xC1;
-    sendBuffer(handshake2);
-    console.log("Handshake 2: " + new Buffer.from(device.readSync()).toString('ascii'));
-
-    var handshake3 = Array(64).fill(0x00);
-    handshake3[0] = 0xFF;
-    handshake3[1] = 0xC1;
-    sendBuffer(handshake3);
-  }
-}
-
-//console.log(devices);
 var devicePath;
 for(var i = 0; i < devices.length; i++) {
   console.log(devices[i]);
@@ -379,7 +315,7 @@ if(devicePath) {
   // });
 
   //sendBuffer(handshake3);
-  var fDevice = new FuseDevice(device);
+  var fDevice = new FuseDevice(device, messages, operators);
 }
 
 var modelNames = {
