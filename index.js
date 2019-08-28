@@ -6,7 +6,6 @@ var devices = HID.devices();
 var FuseDevice = require('./FuseDevice.js');
 var MessageProcessor = require('./MessageProcessor.js');
 const os = require('os');
-//var msgProc;
 var app = express();
 
 var devicePath;
@@ -64,7 +63,7 @@ if(devicePath) {
     REVERB: 9,
     EXPRESSION: 10,
     SYSTEM: 11,
-    COMPRESSOR: !2,
+    COMPRESSOR: 12,
     USBAUDIO: 13,
     EFFECTSLOOP: 14
   }
@@ -448,5 +447,7 @@ app.get('/patches/:patchId', function(req, res) {
     res.json(patches[req.params.patchId]);
   }
 });
+
+app.use(express.static('wwwroot'));
 
 app.listen(3000);
