@@ -4,6 +4,8 @@ var HID = require('node-hid');
 var BufferReader = require('buffer-reader');
 var devices = HID.devices();
 var FuseDevice = require('./FuseDevice.js');
+var FuseModule = require('./FuseModule.js');
+var FusePatch = require('./FusePatch.js');
 var MessageProcessor = require('./MessageProcessor.js');
 const os = require('os');
 var app = express();
@@ -117,8 +119,8 @@ if(devicePath) {
             break;
           case "PresetAmplifier":
             //console.log("PresetAmplifier", chain[i]);
-            var patch = new fusePatch(presetName);
-            patch.AddModule(new fuseModule(chain[i]));
+            var patch = new FusePatch(presetName);
+            patch.AddModule(new FuseModule(chain[i]));
             patches[chain[i].position] = patch;
             //console.log(JSON.parse(JSON.stringify(patch)));
             //if(patch.Name === '') {
@@ -354,58 +356,6 @@ var modelNames = {
 
 };
 
-class fusePatch {
-  constructor(name) {
-    this.Name = name;
-    this.Modules = [];
-  }
-
-  AddModule(module) {
-    this.Modules.push(module);
-  }
-}
-
-class fuseModule {
-  constructor(data) {
-    console.log(data.__private);
-    var tobj = this;
-    this.Type = data.presetMessageType;
-    //this.Parameters = {};
-    //console.log('fuseModule');
-    //console.log(data);
-    var addProperty = (propertyName) => {
-      //console.log("Adding property " + propertyName);
-      var isEnumerable;
-      if(data.__private[propertyName]) {
-        isEnumerable = false;
-      } else {
-        isEnumerable = true;
-      }
-      Object.defineProperty(tobj, propertyName, {
-        get : () => {
-          return data.__data[data.__propertyIndex[propertyName]];
-        },
-        set : (value) => {
-          //data[propertyName] = value;
-          data.__data[data.__propertyIndex[propertyName]] = value;
-        },
-        enumerable: isEnumerable
-      });
-      //tobj[propertyName] = data[propertyName];
-      //console.log(tobj[propertyName]);
-    };
-
-    for(var obj in data) {
-      addProperty(obj);
-    }
-
-    if(this.modelId) {
-      if(modelNames[this.modelId]) {
-        this.modelName = modelNames[this.modelId];
-      }
-    }
-  }
-}
 
 // function fuseModule(data) {
 //   var tobj = this;
