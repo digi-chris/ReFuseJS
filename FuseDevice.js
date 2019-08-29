@@ -15,6 +15,8 @@ class FuseDevice {
             usbDevice.write(buffer);
         }
 
+        this.SendBuffer = sendBuffer;
+
         usbDevice.on("data", msgProc.ReadMessage);
 
         var handshake = Array(64).fill(0x00);
@@ -35,7 +37,12 @@ class FuseDevice {
     }
 
     SendPatch(patchData) {
-        this.msgProc.Build(patchData);
+        var msg = [...this.msgProc.Build(patchData)];
+        var msg2 = Array(64).fill(0x00);
+        msg2[0] = 0x1C;
+        msg2[1] = 0x03;
+        this.SendBuffer(msg);
+        this.SendBuffer(msg2);
     }
 }
 

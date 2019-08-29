@@ -75,6 +75,7 @@ class MessageProcessor {
 
             console.log('message built', msgId);
             console.log(buf);
+            return buf;
         }
     }
 
