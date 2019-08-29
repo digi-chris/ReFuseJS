@@ -350,7 +350,7 @@ if(devicePath) {
 //   }
 // }
 
-var patches = [];
+var patches = {};
 
 //var testobj = {};
 //Object.defineProperty(testobj, 'test', { value: 'testing' });
