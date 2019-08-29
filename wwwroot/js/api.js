@@ -30,13 +30,14 @@ function apiCall(url, args, cache) {
 function apiCallPost(url, args) {
     return new Promise((resolve, reject) => {
 
-        var form_data = new FormData();
-        for (var key in args) {
-            form_data.append(key, args[key]);
-        }
+        //var form_data = new FormData();
+        //for (var key in args) {
+        //    form_data.append(key, args[key]);
+        //}
 
         var xhr = new XMLHttpRequest();
         xhr.open('POST', url);
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xhr.responseType = "json";
         xhr.onload = (e) => {
             resolve(xhr.response);
@@ -47,6 +48,6 @@ function apiCallPost(url, args) {
         xhr.onabort = (e) => {
             reject(e);
         };
-        xhr.send(form_data);
+        xhr.send(JSON.stringify(args));
     });
 }

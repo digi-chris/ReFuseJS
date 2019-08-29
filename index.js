@@ -9,6 +9,7 @@ var FusePatch = require('./FusePatch.js');
 var MessageProcessor = require('./MessageProcessor.js');
 const os = require('os');
 var app = express();
+var bodyParser = require('body-parser');
 
 var devicePath;
 for(var i = 0; i < devices.length; i++) {
@@ -357,6 +358,8 @@ var patches = {};
 //console.log('TESTING-----------------------------');
 //console.log(testobj);
 
+app.use(bodyParser.json());
+
 app.get('/patches', function (req, res) {
   res.json(patches);
 });
@@ -367,6 +370,12 @@ app.get('/patches/:patchId', function(req, res) {
   if(req.params.patchId) {
     res.json(patches[req.params.patchId]);
   }
+});
+
+app.post('/patches/:patchId', function(req, res) {
+  console.log('POST');
+  console.log(req.body);
+  res.send(req.body);
 });
 
 app.use(express.static('wwwroot'));

@@ -39,6 +39,15 @@
                     var module = new Module(patchData.Modules[i]);
                     this.element.appendChild(module.element);
                 }
+
+                this.Update = function() {
+                    apiCallPost("patches/" + index, patchData)
+                        .then((r) => {
+                            console.log(r);
+                        })
+                }
+
+                this.Update();
             }
 
             function Module(moduleData) {
