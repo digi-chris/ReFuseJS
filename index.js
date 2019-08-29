@@ -373,8 +373,17 @@ app.get('/patches/:patchId', function(req, res) {
 });
 
 app.post('/patches/:patchId', function(req, res) {
-  console.log('POST');
-  console.log(req.body);
+  console.log('POST', req.params.patchId, req.body.Name);
+  if(!isNaN(req.params.patchId)) {
+    if(patches[req.params.patchId]) {
+      var cPatch = patches[req.params.patchId];
+      for(var i = 0; i < cPatch.Modules.length; i++) {
+        for(var objName in req.body.Modules[i]) {
+          cPatch.Modules[i][objName] = req.body.Modules[i][objName];
+        }
+      }
+    }
+  }
   res.send(req.body);
 });
 

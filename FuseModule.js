@@ -57,7 +57,10 @@ class FuseModule {
           },
           set : (value) => {
             //data[propertyName] = value;
-            data.__data[data.__propertyIndex[propertyName]] = value;
+            if(data.__data[data.__propertyIndex[propertyName]] !== value) {
+              console.log('setting value ' + propertyName + ' = ' + value);
+              data.__data[data.__propertyIndex[propertyName]] = value;
+            }
           },
           enumerable: isEnumerable
         });

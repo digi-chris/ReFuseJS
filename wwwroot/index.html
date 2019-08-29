@@ -36,7 +36,7 @@
                 header.innerText = patchData.Name;
                 this.element.appendChild(header);
                 for(var i = 0; i < patchData.Modules.length; i++) {
-                    var module = new Module(patchData.Modules[i]);
+                    var module = new Module(patchData.Modules[i], this);
                     this.element.appendChild(module.element);
                 }
 
@@ -50,17 +50,17 @@
                 this.Update();
             }
 
-            function Module(moduleData) {
+            function Module(moduleData, patchObj) {
                 this.element = document.createElement('div');
-                for(var obj in moduleData) {
-                    if(!isNaN(moduleData[obj])) {
-                        var control = new NumberControl(moduleData, obj);
+                for(var objName in moduleData) {
+                    if(!isNaN(moduleData[objName])) {
+                        var control = new NumberControl(moduleData, objName, patchObj);
                         this.element.appendChild(control.element);
                     }
                 }
             }
 
-            function NumberControl(obj, dataName) {
+            function NumberControl(obj, dataName, patchObj) {
                 this.element = document.createElement('div');
                 var label = document.createElement('label');
                 var txtInput = document.createElement('input');
@@ -68,6 +68,10 @@
                 this.element.appendChild(label);
                 this.element.appendChild(txtInput);
                 txtInput.value = obj[dataName];
+                txtInput.addEventListener('input', () => {
+                    obj[dataName] = parseInt(txtInput.value);
+                    patchObj.Update();
+                });
             }
         </script>
     </body>
