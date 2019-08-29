@@ -127,7 +127,12 @@ if(devicePath) {
               pos = chain[i].position;
             }
             var patch = new FusePatch(presetName);
-            patch.AddModule(new FuseModule(chain[i]));
+            var module = new FuseModule(chain[i]);
+            patch.AddModule(module);
+            module.onupdate = (moduleData) => {
+              console.log('module updated!', patch.Name);
+              fDevice.SendPatch(moduleData);
+            };
             patches[pos] = patch;
             //console.log(JSON.parse(JSON.stringify(patch)));
             //if(patch.Name === '') {

@@ -40,6 +40,7 @@ class FuseModule {
       //console.log(data.__private);
       var tobj = this;
       this.Type = data.presetMessageType;
+      this.Data = data;
       //this.Parameters = {};
       //console.log('fuseModule');
       //console.log(data);
@@ -60,6 +61,10 @@ class FuseModule {
             if(data.__data[data.__propertyIndex[propertyName]] !== value) {
               console.log('setting value ' + propertyName + ' = ' + value);
               data.__data[data.__propertyIndex[propertyName]] = value;
+              //console.log(data.__data);
+              if(tobj.onupdate) {
+                tobj.onupdate(data);
+              }
             }
           },
           enumerable: isEnumerable

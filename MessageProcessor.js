@@ -12,7 +12,7 @@ class MessageProcessor {
     }
 
     Build (msgObj) {
-        console.log(msgObj);
+        //console.log(msgObj.__data);
         if(msgObj.__data) {
             var msgId = msgObj.__data[0];
             var flags = msgObj.__data[1];
@@ -27,10 +27,11 @@ class MessageProcessor {
                 var messageArgs = messageType.args;
                 if(messageArgs) {
                     for(var i = 0; i < messageArgs.length; i++) {
-                        console.log(messageArgs[i].name, i);
+                        var writeData = msgObj.__data[msgObj.__propertyIndex[messageArgs[i].name]];
+                        console.log(messageArgs[i].name, writeData);
                         switch(messageArgs[i].type) {
                             case "Buffer":
-                                var array = msgObj[messageArgs[i].name];
+                                var array = writeData;
                                 var bytes = messageArgs[i].count;
                                 for(var j = 0; j < array.length; j++) {
                                     position = buf.writeUInt8(array[j], position);
@@ -42,15 +43,15 @@ class MessageProcessor {
                                 break;
                             case "String":
                                 var bytes = messageArgs[i].count;
-                                var bytesRemaining = bytes = msgObj[messageArgs[i].name].length;
-                                position = buf.write(msgObj[messageArgs[i].name], position);
+                                var bytesRemaining = bytes = writeData.length;
+                                position = buf.write(writeData, position);
                                 //position += bytes;
                                 for(var j = 0; j < bytesRemaining; j++) {
                                     position = buf.writeUInt8(0, position);
                                 }
                                 break;
                             default:
-                                position = buf["write" + messageArgs[i].type](msgObj[messageArgs[i].name], position);
+                                position = buf["write" + messageArgs[i].type](writeData, position);
                                 break;
                         }
 
@@ -58,7 +59,7 @@ class MessageProcessor {
                             if(messageArgs[i].followon[msgObj[messageArgs[i].name]]) {
                                 console.log('found followon - ' + messageArgs[i].followon[msgObj[messageArgs[i].name]].args);
                                 messageArgs = messageArgs[i].followon[msgObj[messageArgs[i].name]].args;
-                                console.log(messageArgs.length);
+                                //console.log(messageArgs.length);
                                 i = 0;
                             }
                         }

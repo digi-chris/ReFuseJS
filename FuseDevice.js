@@ -6,6 +6,7 @@ class FuseDevice {
         this.Devices = {};
         this.Presets = [];
         var msgProc = new MessageProcessor(this, messages, operators);
+        this.msgProc = msgProc;
 
         function sendBuffer(buffer) {
             //if(os.platform() === "win32") {
@@ -31,6 +32,10 @@ class FuseDevice {
         handshake3[0] = 0xFF;
         handshake3[1] = 0xC1;
         sendBuffer(handshake3);
+    }
+
+    SendPatch(patchData) {
+        this.msgProc.Build(patchData);
     }
 }
 
