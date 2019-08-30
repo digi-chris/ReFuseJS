@@ -371,6 +371,10 @@ var patches = {};
 
 app.use(bodyParser.json());
 
+app.get('/controls', function(req, res) {
+  res.json(devices);
+});
+
 app.get('/patches', function (req, res) {
   res.json(patches);
 });
