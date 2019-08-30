@@ -52,6 +52,9 @@
 
             function Module(moduleData, patchObj) {
                 this.element = document.createElement('div');
+                var header = document.createElement('h5');
+                header.innerText = "Module";
+                this.element.appendChild(header);
                 for(var objName in moduleData) {
                     if(!isNaN(moduleData[objName])) {
                         var control = new NumberControl(moduleData, objName, patchObj);
@@ -68,7 +71,16 @@
                 this.element.appendChild(label);
                 this.element.appendChild(txtInput);
                 txtInput.value = obj[dataName];
-                txtInput.addEventListener('input', () => {
+                // txtInput.addEventListener('input', () => {
+                //     obj[dataName] = parseInt(txtInput.value);
+                //     patchObj.Update();
+                // });
+
+                var btnSend = document.createElement('button');
+                btnSend.innerText = "SET";
+                this.element.appendChild(btnSend);
+
+                btnSend.addEventListener("click", () => {
                     obj[dataName] = parseInt(txtInput.value);
                     patchObj.Update();
                 });

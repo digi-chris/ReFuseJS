@@ -119,6 +119,7 @@ if(devicePath) {
             //console.log(chain[i].name);
             break;
           case "PresetAmplifier":
+          case "PresetReverb":
             //console.log("PresetAmplifier", chain[i]);
             var pos;
             if(chain[i].position === 0 && chain[i].controlId === 0) {
@@ -126,7 +127,12 @@ if(devicePath) {
             } else {
               pos = chain[i].position;
             }
-            var patch = new FusePatch(presetName);
+            var patch;
+            if(patches[pos]) {
+              patch = patches[pos];
+            } else {
+              patch = new FusePatch(presetName)
+            }
             var module = new FuseModule(chain[i]);
             patch.AddModule(module);
             module.onupdate = (moduleData) => {
