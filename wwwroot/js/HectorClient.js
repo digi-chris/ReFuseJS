@@ -1,9 +1,10 @@
-function GCPClient(CommandLink, serverAddress) {
+function GCPClient(serverAddress, CommandLink, onConnect) {
     var ws = new WebSocket("ws://" + serverAddress + "/GCP");
     var callbacks = {};
 
     ws.onopen = function(event) {
         console.log("ws open");
+        onConnect();
     };
 
     ws.onmessage = function(event) {
@@ -51,4 +52,11 @@ function GCPClient(CommandLink, serverAddress) {
     }
     
     this.SendCommand = SendCommand;
+}
+
+function guid() {
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+    };
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
 }

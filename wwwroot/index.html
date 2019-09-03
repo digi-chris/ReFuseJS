@@ -87,11 +87,15 @@
                 });
             }
 
-            var wsClient = new GCPClient({
+            var wsClient = new GCPClient("localhost", {
                 "ControlUpdate" : (data) => {
                     console.log(data);
                 }
-            }, "localhost");
+            }, () => {
+                wsClient.SendCommand("GetControls", [], (data) => {
+                    console.log('got controls:', data);
+                });
+            });
         </script>
     </body>
 </html>
