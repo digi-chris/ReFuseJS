@@ -22,9 +22,9 @@ function GCPClient(serverAddress, CommandLink, onConnect) {
             CommandLink[respObj.name].apply(this, respObj.arguments);
         }
 
-        if (respObj.name !== "__response") {
-            applyCmdLink(this, respObj.name, respObj.arguments);
-        }
+        //if (respObj.name !== "__response") {
+        //    applyCmdLink(this, respObj.name, respObj.arguments);
+        //}
     };
 
     function SendCommand(commandName, args, callback, hectorServerName)

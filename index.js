@@ -84,6 +84,19 @@ if(devicePath) {
     //106 : { name: "amplifier", controls: [{ label: "volume" }, { label: "gain" }, { label: "unknown" }, { label: "unknown" }, { label: "treble" }, { label: "unknown" } , { label: "bass" } ] }
   }
 
+  var controlParameterLabels = {
+    0: "Volume 2",
+    1: "Gain",
+    4: "Treble",
+    6: "Bass"
+  };
+
+  for(var i = 0; i < 255; i++) {
+    if(!controlParameterLabels[i]) {
+      controlParameterLabels[i] = "unknown";
+    }
+  }
+
   var operators = {
     "ControlParameter" : (data) => {
       console.log('ControlParameter operator running..');
@@ -95,10 +108,11 @@ if(devicePath) {
       }
       for(var obj in data) {
         if(!devices[data.deviceId].controls[data.controlIndex]) {
-          devices[data.deviceId].controls[data.controlIndex] = { label: "unknown" };
+          devices[data.deviceId].controls[data.controlIndex] = { label: controlParameterLabels[data.controlIndex] };
         }
         devices[data.deviceId].controls[data.controlIndex][obj] = data[obj];
       }
+      hectorGCP.SendMessage("ControlUpdate", [devices]);
     },
     "PresetAmplifier" : (data) => {
       console.log("PresetAmplifier-----------", data);
