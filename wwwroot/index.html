@@ -2,6 +2,7 @@
     <head>
         <title>reFUSE</title>
         <script src="js/api.js" type="text/javascript"></script>
+        <script src="js/HectorClient.js" type="text/javascript"></script>
     </head>
     <body>
         <h1>reFUSE</h1>
@@ -85,6 +86,12 @@
                     patchObj.Update();
                 });
             }
+
+            var wsClient = new GCPClient({
+                "ControlUpdate" : (data) => {
+                    console.log(data);
+                }
+            }, "localhost");
         </script>
     </body>
 </html>

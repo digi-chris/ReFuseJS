@@ -406,3 +406,12 @@ app.post('/patches/:patchId', function(req, res) {
 app.use(express.static('wwwroot'));
 
 app.listen(3000);
+
+function CommandLink() {
+  this.GetControls = (callback) => {
+    callback(devices);
+  };
+}
+
+var cLink = new CommandLink();
+var hectorGCP = new comms.GCPServer(cLink);

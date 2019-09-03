@@ -1,9 +1,7 @@
-var HectorCore = require('./HectorCore.js');
 var ws = require('nodejs-websocket');
 var WebSocket = require('ws');
 var dgram = require('dgram');
-var BSON = require('bson');
-var bson = new BSON();
+var bson = require('bson');
 var os = require('os');
 const uuidv1 = require('uuid/v1');
 
