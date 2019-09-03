@@ -10,9 +10,14 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "bson": "^4.0.2",
     "buffer-reader": "^0.1.0",
+    "dgram": "^1.0.1",
     "express": "^4.17.1",
     "node-hid": "^0.7.9",
-    "os": "^0.1.1"
+    "nodejs-websocket": "^1.7.2",
+    "os": "^0.1.1",
+    "uuid": "^3.3.3",
+    "ws": "^7.1.2"
   }
 }

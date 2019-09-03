@@ -10,6 +10,7 @@ var MessageProcessor = require('./MessageProcessor.js');
 const os = require('os');
 var app = express();
 var bodyParser = require('body-parser');
+var comms = require('./HectorComms.js');
 
 var devicePath;
 for(var i = 0; i < devices.length; i++) {
